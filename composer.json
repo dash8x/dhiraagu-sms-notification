@@ -1,0 +1,41 @@
+{
+    "name": "dash8x/dhiraagu-sms-notification",
+    "description": "Laravel notification channel for Dhiraagu Bulk SMS Gateway",
+    "keywords": ["laravel", "notification", "sms", "maldives", "dhivehi", "dhisms", "texting", "messaging", "dhiraagu"],
+    "homepage": "https://github.com/dash8x/dhiraagu-sms-notification",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Arushad Ahmed",
+            "email": "arushad@javaabu.com",
+            "homepage": "http://arushad.org",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "dash8x/dhiraagu-sms": "^0.3.1",
+        "illuminate/notifications": "^5.3",
+        "illuminate/support": "^5.1|^5.2|^5.3"
+    },
+    "require-dev": {
+        "mockery/mockery": "^0.9.5",
+        "phpunit/phpunit": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dash8x\\DhiraaguSmsNotification\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Dash8x\\DhiraaguSmsNotification\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
