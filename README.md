@@ -15,9 +15,10 @@ This package makes it easy to send notifications using [Dhiraagu Bulk SMS Gatewa
 ## Contents
 
 - [Installation](#installation)
-	- [Setting up the DhiraaguSmsNotification service](#setting-up-the-DhiraaguSmsNotification-service)
+	- [Setting up the Dhiraagu Bulk Sms Gateway credentials](#setting-up-the-dhiraagu-bulk-sms-gateway-credentials)
 - [Usage](#usage)
 	- [Available Message methods](#available-message-methods)
+	- [Checking delivery status](#checking-delivery-status)
 - [Changelog](#changelog)
 - [Testing](#testing)
 - [Security](#security)
@@ -29,19 +30,102 @@ This package makes it easy to send notifications using [Dhiraagu Bulk SMS Gatewa
 
 ## Installation
 
-Please also include the steps for any third-party service setup that's required for this package.
+You can install the package via composer:
 
-### Setting up the DhiraaguSmsNotification service
+```bash
+composer require dash8x/dhiraagu-sms-notification
+```
 
-Optionally include a few steps how users can set up the service.
+Add the service provider (only required on Laravel 5.4 or lower):
+
+```php
+// config/app.php
+'providers' => [
+    ...
+    Dash8x\DhiraaguSmsNotification\DhiraaguSmsNotificationServiceProvider::class,
+],
+```
+
+Optionally add the facade.
+```php
+// config/app.php
+'aliases' => [
+    ...
+    'DhiraaguSms' => Dash8x\DhiraaguSmsNotification\Facades\DhiraaguSms::class,
+],
+```
+
+### Setting up the Dhiraagu Bulk Sms Gateway credentials
+
+Add your Dhiraagu Bulk SMS Gateway Account Username, Password, and Url (optional) to your `config/services.php`:
+
+```php
+// config/services.php
+...
+'dhiraagu' => [
+    'username' => env('DHIRAAGU_SMS_USERNAME'), // Bulk SMS gateway username, usually same as your sender name 
+    'password' => env('DHIRAAGU_SMS_PASSWORD'), // Bulk SMS gateway password
+    'url' => env('DHIRAAGU_SMS_URL'), // optional, use only if you need to override the default,
+                                      // defaults to https://bulkmessage.dhiraagu.com.mv/partners/xmlMessage.jsp   
+],
+...
+```
 
 ## Usage
 
-Some code examples, make it clear how to use the package
+Now you can use the channel in your `via()` method inside the notification:
+
+```php
+use Dash8x\DhiraaguSmsNotification\DhiraaguSmsNotificationChannel;
+use Illuminate\Notifications\Notification;
+
+class AccountApproved extends Notification
+{
+    public function via($notifiable)
+    {
+        return [DhiraaguSmsNotificationChannel::class];
+    }
+
+    public function toDhiraagu($notifiable)
+    {
+        return "Your {$notifiable->service} account was approved!";
+    }
+}
+```
+
+In order to let your Notification know which phone are you sending to, the channel will look for the phone_number attribute of the Notifiable model. If you want to override this behaviour, add the routeNotificationForDhiraagu method to your Notifiable model.
+
+```php
+public function routeNotificationForDhiraagu()
+{
+    return '+9607777777';
+}
+```
+
+It also supports sending to multiple phone numbers.
+
+```php
+public function routeNotificationForDhiraagu()
+{
+    return ['+9607777777', '+9609999999'];
+}
+```
 
 ### Available Message methods
 
-A list of all available options
+#### DhiraaguSmsNotificationMessage
+
+- `setNumbers('')`: Accepts phone numbers to use as the notification recipients.
+- `setMessage('')`: Accepts a string value for the notification body.
+- `getNumbers()`: Returns the recipients.
+- `getMessage()`: Returns the string value of the notification body.
+
+### Checking delivery status
+
+To proccess any laravel notification channel response check [Laravel Notification Events](https://laravel.com/docs/5.6/notifications#notification-events)
+This channel returns a `DhiraaguSmsMessage` response object.
+
+Check [dash8x/dhiraagu-sms](https://github.com/dash8x/dhiraagu-sms#check-sms-delivery-status) for Delivery Status Checking Documentation.
 
 ## Changelog
 
