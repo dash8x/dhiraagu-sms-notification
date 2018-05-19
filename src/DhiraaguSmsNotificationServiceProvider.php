@@ -13,14 +13,13 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
     public function boot()
     {
         // Bootstrap code here.
+    }
 
-        $this->app->when(DhiraaguSmsNotificationChannel::class)
-            ->needs(DhiraaguSms::class)
-            ->give(function () {
-                return $this->app->make(DhiraaguSms::class);
-            });
-
-
+    /**
+     * Register the application services.
+     */
+    public function register()
+    {
         $this->app->bind(DhiraaguSms::class, function () {
             $config = $this->app['config']['services.dhiraagu'];
             $username = array_get($config, 'username');
@@ -30,13 +29,6 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
             return new DhiraaguSms($username, $password, $url);
         });
 
-    }
-
-    /**
-     * Register the application services.
-     */
-    public function register()
-    {
         $this->app->bind('dhiraagusms', function () {
             return $this->app->make(DhiraaguSms::class);
         });
