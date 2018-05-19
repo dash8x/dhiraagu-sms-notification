@@ -2,6 +2,7 @@
 
 namespace Dash8x\DhiraaguSmsNotification;
 
+use Dash8x\DhiraaguSms\DhiraaguSms;
 use Illuminate\Support\ServiceProvider;
 
 class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
@@ -13,21 +14,21 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
     {
         // Bootstrap code here.
 
-        /**
-         * Here's some example code we use for the pusher package.
-
-        $this->app->when(Channel::class)
-            ->needs(Pusher::class)
+        $this->app->when(DhiraaguSmsNotificationChannel::class)
+            ->needs(DhiraaguSms::class)
             ->give(function () {
-                $pusherConfig = config('broadcasting.connections.pusher');
-
-                return new Pusher(
-                    $pusherConfig['key'],
-                    $pusherConfig['secret'],
-                    $pusherConfig['app_id']
-                );
+                return $this->app->make(DhiraaguSms::class);
             });
-         */
+
+
+        $this->app->bind(DhiraaguSms::class, function () {
+            $config = $this->app['config']['services.dhiraagu'];
+            $username = array_get($config, 'username');
+            $password = array_get($config, 'password');
+            $url = array_get($config, 'url');
+
+            return new DhiraaguSms($username, $password, $url);
+        });
 
     }
 
@@ -36,5 +37,18 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->bind('dhiraagusms', function () {
+            return $this->app->make(DhiraaguSms::class);
+        });
+    }
+
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return ['dhiraagusms'];
     }
 }

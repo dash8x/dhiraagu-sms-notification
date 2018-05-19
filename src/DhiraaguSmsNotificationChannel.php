@@ -2,16 +2,35 @@
 
 namespace Dash8x\DhiraaguSmsNotification;
 
+use Dash8x\DhiraaguSms\DhiraaguSms;
 use Dash8x\DhiraaguSmsNotification\Exceptions\CouldNotSendNotification;
-use Dash8x\DhiraaguSmsNotification\Events\MessageWasSent;
-use Dash8x\DhiraaguSmsNotification\Events\SendingMessage;
+use Exception;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Notifications\Events\NotificationFailed;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Notifications\Notification;
 
 class DhiraaguSmsNotificationChannel
 {
-    public function __construct()
+    /**
+     * @var DhiraaguSms
+     */
+    protected $dhiraagu_sms;
+    /**
+     * @var Dispatcher
+     */
+    protected $events;
+
+    /**
+     * DhiraaguSmsNotificationChannel constructor.
+     *
+     * @param DhiraaguSms $dhiraagu_sms
+     * @param Dispatcher $events
+     */
+    public function __construct(DhiraaguSms $dhiraagu_sms, Dispatcher $events)
     {
-        // Initialisation code here
+        $this->dhiraagu_sms = $dhiraagu_sms;
+        $this->events = $events;
     }
 
     /**
@@ -24,10 +43,60 @@ class DhiraaguSmsNotificationChannel
      */
     public function send($notifiable, Notification $notification)
     {
-        //$response = [a call to the api of your notification send]
+        try {
+            $to = $this->getTo($notifiable);
+            $message = $notification->toDhiraagu($notifiable);
 
-//        if ($response->error) { // replace this by the code need to check for errors
-//            throw CouldNotSendNotification::serviceRespondedWithAnError($response);
-//        }
+            if (is_string($message)) {
+                $message = new DhiraaguSmsNotificationMessage($message, $to);
+            }
+
+            if (! $message instanceof DhiraaguSmsNotificationMessage) {
+                throw CouldNotSendNotification::invalidMessageObject($message);
+            }
+
+            $response = $this->dhiraagu_sms->send($message->getNumbers(), $message->getMessage());
+            $event = new NotificationSent($notifiable, $notification, 'dhiraagu', $response);
+            $this->dispatchEvent($event);
+
+            return $response;
+        } catch (Exception $exception) {
+            $event = new NotificationFailed($notifiable, $notification, 'dhiraagu', ['message' => $exception->getMessage(), 'exception' => $exception]);
+            $this->dispatchEvent($event);
+        }
+    }
+
+    /**
+     * Get the address to send a notification to.
+     *
+     * @param mixed $notifiable
+     * @return mixed
+     * @throws CouldNotSendNotification
+     */
+    protected function getTo($notifiable)
+    {
+        if ($notifiable->routeNotificationFor('dhiraagu')) {
+            return $notifiable->routeNotificationFor('dhiraagu');
+        }
+
+        if (isset($notifiable->phone_number)) {
+            return $notifiable->phone_number;
+        }
+
+        throw CouldNotSendNotification::invalidReceiver();
+    }
+
+    /**
+     * Dispatch event
+     *
+     * @param $event
+     */
+    protected function dispatchEvent($event)
+    {
+        if (function_exists('event')) { // Use event helper when possible to add Lumen support
+            event($event);
+        } else {
+            $this->events->fire($event);
+        }
     }
 }
