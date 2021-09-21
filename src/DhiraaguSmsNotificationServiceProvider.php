@@ -4,6 +4,7 @@ namespace Dash8x\DhiraaguSmsNotification;
 
 use Dash8x\DhiraaguSms\DhiraaguSms;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Arr;
 
 class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
 {
@@ -22,9 +23,9 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
     {
         $this->app->bind(DhiraaguSms::class, function () {
             $config = $this->app['config']['services.dhiraagu'];
-            $username = array_get($config, 'username');
-            $password = array_get($config, 'password');
-            $url = array_get($config, 'url');
+            $username = Arr::get($config, 'username');
+            $password = Arr::get($config, 'password');
+            $url = Arr::get($config, 'url');
 
             return new DhiraaguSms($username, $password, $url);
         });
