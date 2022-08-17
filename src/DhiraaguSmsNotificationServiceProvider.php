@@ -21,7 +21,7 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(DhiraaguSms::class, function () {
+        $this->app->singleton(DhiraaguSms::class, function () {
             $config = $this->app['config']['services.dhiraagu'];
             $username = Arr::get($config, 'username');
             $password = Arr::get($config, 'password');
@@ -30,7 +30,7 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
             return new DhiraaguSms($username, $password, $url);
         });
 
-        $this->app->bind('dhiraagusms', function () {
+        $this->app->singleton('dhiraagusms', function () {
             return $this->app->make(DhiraaguSms::class);
         });
     }
@@ -42,6 +42,6 @@ class DhiraaguSmsNotificationServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return ['dhiraagusms'];
+        return [DhiraaguSms::class];
     }
 }

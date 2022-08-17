@@ -37,5 +37,15 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Dash8x\\DhiraaguSmsNotification\\DhiraaguSmsNotificationServiceProvider"
+            ],
+            "aliases": {
+                "DhiraaguSms": "Dash8x\\DhiraaguSmsNotification\\Facades\\DhiraaguSms"
+            }
+        }
     }
 }
